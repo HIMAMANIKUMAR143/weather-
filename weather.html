@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weather App</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.8s ease-in-out;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 20px;
+      width: 450px;
+      backdrop-filter: blur(20px);
+      padding: 40px 30px;
+      box-shadow: 0 8px 40px rgba(255, 165, 0, 0.6);
+      text-align: center;
+      color: #fff;
+    }
+
+    .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      background: linear-gradient(45deg, #f90, #fbbc04);
+      box-shadow: 0 0 25px #ffb347;
+      padding: 20px 40px;
+      border-radius: 50px;
+      font-weight: 500;
+      margin-bottom: 25px;
+      color: black;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #1e30ff;
+      color: white;
+      border: none;
+      padding: 12px 35px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #3a50ff;
+    }
+
+    .weather-info {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #ffbb33;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="icon">🌤️</div>
+    <h2>Weather</h2>
+    <input type="text" id="cityInput" placeholder="Enter the City To see Weather" />
+    <button id="checkBtn">Check</button>
+    <div id="weatherInfo" class="weather-info"></div>
+  </div>
+
+  <script>
+    const checkBtn = document.getElementById('checkBtn');
+    const cityInput = document.getElementById('cityInput');
+    const weatherInfo = document.getElementById('weatherInfo');
+
+    // Your OpenWeatherMap API key
+    const weatherAPIKey = '4d27d404fbf77aee75a28d12430fbab9'; 
+
+    // IMPORTANT: Replace with your actual Unsplash API key
+    const unsplashAPIKey = 'YOUR_UNSPLASH_ACCESS_KEY';
+
+    checkBtn.addEventListener('click', () => {
+      const city = cityInput.value.trim();
+      if (!city) {
+        alert("Please enter a city name.");
+        return;
+      }
+
+      fetchWeather(city);
+    });
+
+    async function fetchWeather(city) {
+      try {
+        // FIX: Correctly used the weatherAPIKey variable in the URL
+        const weatherResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${weatherAPIKey}&units=metric`
+        );
+
+        if (!weatherResponse.ok) {
+          throw new Error('City not found');
+        }
+
+        const weatherData = await weatherResponse.json();
+
+        const description = weatherData.weather[0].description;
+        const temp = weatherData.main.temp;
+        const mainWeather = weatherData.weather[0].main.toLowerCase();
+
+        weatherInfo.innerHTML = `
+          <strong>${city.toUpperCase()}</strong><br/>
+          ${description}<br/>
+          Temperature: ${temp} °C
+        `;
+
+        setBackground(mainWeather);
+
+      } catch (error) {
+        weatherInfo.innerHTML = "Error: " + error.message;
+        document.body.style.backgroundImage = '';
+      }
+    }
+
+    async function setBackground(weatherCondition) {
+      try {
+        // Fetch a background image from Unsplash API based on weather condition
+        const photoResponse = await fetch(
+          `https://api.unsplash.com/photos/random?query=${weatherCondition}+nature&orientation=landscape&client_id=${unsplashAPIKey}`
+        );
+        const photoData = await photoResponse.json();
+
+        if (photoData && photoData.urls && photoData.urls.full) {
+          document.body.style.backgroundImage = `url(${photoData.urls.full})`;
+        } else {
+          // fallback background
+          document.body.style.backgroundImage = `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80')`;
+        }
+      } catch (err) {
+        console.error('Background API error:', err);
+        document.body.style.backgroundImage = `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80')`;
+      }
+    }
+  </script>
+</body>
+</html>
